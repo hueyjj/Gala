@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import calendar, sys
+import calendar, sys, json
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (QApplication, QWidget, QSystemTrayIcon, QMenu,
@@ -22,6 +22,8 @@ class Gala(QWidget):
         self.ignoreQuit = True 
         self.editWindow = None
         self.__columnWidth = 100
+        self.numRow = 20
+        self.numColumn = 2
 
         self.trayMenu = QMenu(self)
         self.trayMenu.addAction("Open", self.open)
@@ -40,10 +42,12 @@ class Gala(QWidget):
 
         self.firstHeader = "Time"
         self.secondHeader = "Description"
+        self.timeCol = 0
+        self.descCol = 1
 
         self.table = QTableWidget(self)
-        self.table.setRowCount(20)
-        self.table.setColumnCount(2)
+        self.table.setRowCount(numRow)
+        self.table.setColumnCount(numColumn)
         self.table.setHorizontalHeaderLabels([self.firstHeader, self.secondHeader])
         self.table.setItem(0, 0, self.tableItem)
         self.table.setItem(1, 0, self.tableItem2)
@@ -66,24 +70,30 @@ class Gala(QWidget):
         self.header.setMinimumSectionSize(self.__columnWidth*0.10)
         self.header.setMaximumSectionSize(self.__columnWidth*1.90)
 
-        self.saveButton = QToolButton()
-        self.saveButton.setText("Save")
-        self.saveButton.clicked.connect(self.save)
-
-        self.galaButton = QToolButton()
-        self.galaButton.setText("Gala")
-        self.galaButton.clicked.connect(self.gala)
+        self.saveButton = self.createButton("Save", self.saveButtonClick)
+        self.galaButton = self.createButton("Gala", self.galaButtonClick)
+        self.loadButton = self.createButton("Load", self.loadButtonClick)
 
         layout = QGridLayout(self)
-        layout.addWidget(self.table, 0, 0)
-        layout.addWidget(self.saveButton, 1, 0, Qt.AlignRight)
-        layout.addWidget(self.galaButton, 1, 0, Qt.AlignLeft)
+        layout.addWidget(self.table, 0, 0, 1, 6)
+        layout.addWidget(self.loadButton, 1, 0)
+        layout.addWidget(self.saveButton, 1, 1)
+        layout.addWidget(self.galaButton, 1, 5)
         # only vertical resize allowed
         layout.setSizeConstraint(QLayout.SetMinAndMaxSize)
         self.setLayout(layout)
 
         self.resize(self.sizeHint().width(), 450)
         self.setWindowTitle("Gala")
+
+    def autoLoad(self):
+        pass
+
+    def createButton(self, text, func):
+        btn = QToolButton()
+        btn.setText(text)
+        btn.clicked.connect(func)
+        return btn
         
     def openGalaEdit(self):
         self.topRight = self.rect().topRight()
@@ -95,8 +105,6 @@ class Gala(QWidget):
 
     def onClickEvent(self, event):
         if event == QSystemTrayIcon.DoubleClick:
-            c = self.table.item(0, 0)
-            print(c.text())
             self.open()
 
     def closeEvent(self, closeEvent):
@@ -108,12 +116,31 @@ class Gala(QWidget):
     def hideEvent(self, hideEvent):
         self.hide()
 
-    def gala(self):
+    def galaButtonClick(self):
         print("gala called")
 
+    def saveButtonClick(self):
+        self.save()
+
+    def loadButtonClick(self):
+        pass
+
     def save(self):
-        print("save called")
+        with open("GalaData.json", 'a') as f:
+
+    def convertTableToJson(self):
+        items = []
+        for row in range(0, numRow):
+            item = {} 
+            for col in range(0, numColumn):
+                item["row"] = row
+                item["column"] = col
+                
+                text = self.table.item(row, col).text()
+                
+        c = self.table.item(0, 0)
         
+    
     def open(self):
         self.setVisible(True)
         self.raise_()

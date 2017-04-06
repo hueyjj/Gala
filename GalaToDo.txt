@@ -1,0 +1,5 @@
+- Add extension room for adding more headers
+    - widget should expand accordingly
+    - save json should assess table dynamically, currently assums only two row
+    - load json should be able to handle unknown, multiple sets of items for
+      each row
