@@ -46,20 +46,21 @@ class Gala(QWidget):
         self.descCol = 1
 
         self.table = QTableWidget(self)
-        self.table.setRowCount(numRow)
-        self.table.setColumnCount(numColumn)
-        self.table.setHorizontalHeaderLabels([self.firstHeader, self.secondHeader])
+        self.table.setRowCount(self.numRow)
+        self.table.setColumnCount(self.numColumn)
+        self.table.setHorizontalHeaderLabels([self.firstHeader, 
+            self.secondHeader])
         self.table.setItem(0, 0, self.tableItem)
         self.table.setItem(1, 0, self.tableItem2)
         self.table.setColumnWidth(0, self.__columnWidth)
         self.table.setColumnWidth(1, self.__columnWidth)
         
-        self.tableScrollWidth = self.table.verticalScrollBar().sizeHint().width()
-        self.tableHeaderWidth = self.table.horizontalHeader().length() 
-        self.tableVertHeaderWidth = self.table.verticalHeader().width()
-        self.tableFrameWidth = self.table.frameWidth() * 2
-        self.tableWidth = (self.tableScrollWidth
-                + self.tableHeaderWidth + self.tableFrameWidth)
+        self.tableScrollW = self.table.verticalScrollBar().sizeHint().width()
+        self.tableHeaderW = self.table.horizontalHeader().length() 
+        self.tableVertHeaderW = self.table.verticalHeader().width()
+        self.tableFrameW = self.table.frameWidth() * 2
+        self.tableWidth = (self.tableScrollW
+                + self.tableHeaderW + self.tableFrameW)
         self.table.setFixedWidth(self.tableWidth)
 
         self.table.verticalHeader().hide()
@@ -126,20 +127,38 @@ class Gala(QWidget):
         pass
 
     def save(self):
-        with open("GalaData.json", 'a') as f:
+        self.setFocus()
+        with open("GalaData.json", 'w') as f:
+            data = self.convertTableToJson()
+            f.write(data)
+            f.close()
 
     def convertTableToJson(self):
         items = []
-        for row in range(0, numRow):
+        for row in range(0, self.numRow):
             item = {} 
-            for col in range(0, numColumn):
-                item["row"] = row
-                item["column"] = col
-                
-                text = self.table.item(row, col).text()
-                
-        c = self.table.item(0, 0)
-        
+            item["row"] = row
+
+            for col in range(0, self.numColumn):
+                tableItem = self.table.item(row, col)
+                if tableItem is None:
+                    text = None
+                else:
+                    text = tableItem.text()
+
+                if col == 0:
+                    item["time"] = text
+                elif col == 1:  
+                    item["description"] = text
+            
+            if item["time"] is None and item["description"] is None:
+                continue
+            else:
+                items.append(item)
+
+        galaItems = {"gala_items": items}
+        jsonString = json.dumps(galaItems, indent=4)
+        return jsonString
     
     def open(self):
         self.setVisible(True)
