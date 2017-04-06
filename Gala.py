@@ -82,6 +82,7 @@ class Gala(QWidget):
         layout.setSizeConstraint(QLayout.SetMinAndMaxSize)
         self.setLayout(layout)
 
+        self.resize(self.sizeHint().width(), 450)
         self.setWindowTitle("Gala")
         
     def openGalaEdit(self):
