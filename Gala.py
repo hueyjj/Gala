@@ -5,13 +5,30 @@ import calendar, sys, json
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (QApplication, QWidget, QSystemTrayIcon, QMenu,
         QTableWidget, QTableWidgetItem, QLayout, QGridLayout, QDialog, 
-        QSizePolicy, QScrollBar, QHeaderView, QToolButton)
+        QSizePolicy, QScrollBar, QHeaderView, QToolButton, QDialogButtonBox,
+        QLineEdit, QMessageBox)
 from PyQt5.QtGui import QIcon, QCursor, QWindow
 
-class GalaEdit(QDialog):
+class GalaPopup(QMessageBox):
 
-    def __init__(self, parent=None):
+    def __init__(self, time, description, parent=None):
         super().__init__()
+        self.__time = time
+        self.__message = description 
+
+        self.setText("time here")
+        self.setInformativeText("extra information goes herereally long stringaisogndasgoisangfdsgnoidsngodsgnoisdgnoiasgnoisagnoishns"
+                "i don't really know how long this iwll be hahaha\n idk")
+
+        self.setWindowTitle("GalaPopup")
+
+    def time():
+        return self.__time
+
+    def message():
+        return self.__message
+
+
         
 class Gala(QWidget):
     """ Main window that holds the main layout """
@@ -20,7 +37,7 @@ class Gala(QWidget):
         super().__init__()
 
         self.ignoreQuit = True 
-        self.editWindow = None
+        self.galaPopup = None
         self.__columnWidth = 100
         self.numRow = 20
         self.numColumn = 2
@@ -52,8 +69,8 @@ class Gala(QWidget):
             self.secondHeader])
         self.table.setItem(0, 0, self.tableItem)
         self.table.setItem(1, 0, self.tableItem2)
-        self.table.setColumnWidth(0, self.__columnWidth)
-        self.table.setColumnWidth(1, self.__columnWidth)
+        #self.table.setColumnWidth(0, self.__columnWidth)
+        #self.table.setColumnWidth(1, self.__columnWidth)
         
         self.tableScrollW = self.table.verticalScrollBar().sizeHint().width()
         self.tableHeaderW = self.table.horizontalHeader().length() 
@@ -68,8 +85,9 @@ class Gala(QWidget):
         self.header = self.table.horizontalHeader()
         self.header.setSectionResizeMode(0, QHeaderView.Interactive)
         self.header.setSectionResizeMode(1, QHeaderView.Stretch)
-        self.header.setMinimumSectionSize(self.__columnWidth*0.10)
-        self.header.setMaximumSectionSize(self.__columnWidth*1.90)
+        self.headerMidPoint = self.header.length() / 2
+        self.header.setMinimumSectionSize(self.headerMidPoint*0.10)
+        self.header.setMaximumSectionSize(self.headerMidPoint*1.90)
 
         self.saveButton = self.createButton("Save", self.saveButtonClick)
         self.galaButton = self.createButton("Gala", self.galaButtonClick)
@@ -96,20 +114,20 @@ class Gala(QWidget):
         btn.clicked.connect(func)
         return btn
         
-    def openGalaEdit(self):
-        self.topRight = self.rect().topRight()
-        self.topRight = self.mapToGlobal(self.topRight)
+    def openGalaPopup(self):
+        topRight = self.rect().topRight()
+        topRight = self.mapToGlobal(topRight)
 
-        editWindow = GalaEdit(self)
-        editWindow.move(self.topRight)
-        editWindow.exec_()
+        self.galaPopup = GalaPopup("17:00", "Peace")
+        self.galaPopup.move(topRight)
+        self.galaPopup.exec_()
+        print("???", flush=True)
 
     def onClickEvent(self, event):
         if event == QSystemTrayIcon.DoubleClick:
             self.open()
 
     def closeEvent(self, closeEvent):
-        # super().closeEvent(closeEvent)
         if self.ignoreQuit:
             closeEvent.ignore()
             self.hide()
@@ -118,7 +136,7 @@ class Gala(QWidget):
         self.hide()
 
     def galaButtonClick(self):
-        print("gala called")
+        self.openGalaPopup()
 
     def saveButtonClick(self):
         self.save()
