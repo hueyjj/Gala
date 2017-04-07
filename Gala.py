@@ -16,10 +16,8 @@ class GalaPopup(QMessageBox):
         self.__time = time
         self.__message = description 
 
-        self.setText("time here")
-        self.setInformativeText("extra information goes herereally long stringaisogndasgoisangfdsgnoidsngodsgnoisdgnoiasgnoisagnoishns"
-                "i don't really know how long this iwll be hahaha\n idk")
-
+        self.setText(time)
+        self.setInformativeText(description)
         self.setWindowTitle("GalaPopup")
 
     def time():
@@ -121,7 +119,7 @@ class Gala(QWidget):
         self.galaPopup = GalaPopup("17:00", "Peace")
         self.galaPopup.move(topRight)
         self.galaPopup.exec_()
-        print("???", flush=True)
+
 
     def onClickEvent(self, event):
         if event == QSystemTrayIcon.DoubleClick:
@@ -150,6 +148,17 @@ class Gala(QWidget):
             data = self.convertTableToJson()
             f.write(data)
             f.close()
+    
+    def open(self):
+        self.setVisible(True)
+        self.raise_()
+
+    def quit(self):
+        self.ignoreQuit = False
+        self.close()
+
+    def hide(self):
+        self.setVisible(False)
 
     def convertTableToJson(self):
         items = []
@@ -177,26 +186,16 @@ class Gala(QWidget):
         galaItems = {"gala_items": items}
         jsonString = json.dumps(galaItems, indent=4)
         return jsonString
-    
-    def open(self):
-        self.setVisible(True)
-        self.raise_()
-
-    def quit(self):
-        self.ignoreQuit = False
-        self.close()
-
-    def hide(self):
-        self.setVisible(False)
 
 def main():
     import sys
 
     app = QApplication(sys.argv)
+    app.setQuitOnLastWindowClosed(False)
 
     gala = Gala()
     gala.show()
-    
+
     sys.exit(app.exec_())
 
 if __name__ == '__main__':
