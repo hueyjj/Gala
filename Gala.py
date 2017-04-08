@@ -2,17 +2,17 @@
 
 import calendar, sys, json
 
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QCoreApplication
 from PyQt5.QtWidgets import (QApplication, QWidget, QSystemTrayIcon, QMenu,
         QTableWidget, QTableWidgetItem, QLayout, QGridLayout, QDialog, 
         QSizePolicy, QScrollBar, QHeaderView, QToolButton, QDialogButtonBox,
         QLineEdit, QMessageBox)
-from PyQt5.QtGui import QIcon, QCursor, QWindow
+from PyQt5.QtGui import QIcon, QCursor, QWindow, QGuiApplication
 
 class GalaPopup(QMessageBox):
 
     def __init__(self, time, description, parent=None):
-        super().__init__()
+        super().__init__(parent)
         self.__time = time
         self.__message = description 
 
@@ -25,17 +25,14 @@ class GalaPopup(QMessageBox):
 
     def message():
         return self.__message
-
-
         
 class Gala(QWidget):
     """ Main window that holds the main layout """
 
-    def __init__(self):
+    def __init__(self, parent=None):
         super().__init__()
 
         self.ignoreQuit = True 
-        self.galaPopup = None
         self.__columnWidth = 100
         self.numRow = 20
         self.numColumn = 2
@@ -100,7 +97,8 @@ class Gala(QWidget):
         layout.setSizeConstraint(QLayout.SetMinAndMaxSize)
         self.setLayout(layout)
 
-        self.resize(self.sizeHint().width(), 450)
+        height = self.table.verticalHeader().width() * 20 
+        self.resize(self.sizeHint().width(), height)
         self.setWindowTitle("Gala")
 
     def autoLoad(self):
@@ -116,10 +114,9 @@ class Gala(QWidget):
         topRight = self.rect().topRight()
         topRight = self.mapToGlobal(topRight)
 
-        self.galaPopup = GalaPopup("17:00", "Peace")
-        self.galaPopup.move(topRight)
-        self.galaPopup.exec_()
-
+        galaPopup = GalaPopup("17:00", "Peace")
+        galaPopup.move(topRight)
+        galaPopup.exec_()
 
     def onClickEvent(self, event):
         if event == QSystemTrayIcon.DoubleClick:
@@ -129,6 +126,8 @@ class Gala(QWidget):
         if self.ignoreQuit:
             closeEvent.ignore()
             self.hide()
+        else:
+            QCoreApplication.exit()
 
     def hideEvent(self, hideEvent):
         self.hide()
@@ -195,7 +194,6 @@ def main():
 
     gala = Gala()
     gala.show()
-
     sys.exit(app.exec_())
 
 if __name__ == '__main__':
