@@ -11,20 +11,20 @@ from PyQt5.QtGui import QIcon, QCursor, QWindow, QGuiApplication
 
 class GalaPopup(QMessageBox):
 
-    def __init__(self, time, description, parent=None):
+    def __init__(self, text="", description="", parent=None):
         super().__init__(parent)
-        self.__time = time
-        self.__message = description 
+        self.__text = text
+        self.__description= description 
 
-        self.setText(time)
+        self.setText(text)
         self.setInformativeText(description)
         self.setWindowTitle("GalaPopup")
 
-    def time():
-        return self.__time
+    def text():
+        return self.__text
 
-    def message():
-        return self.__message
+    def description():
+        return self.__description
         
 class Gala(QWidget):
     """ Main window that holds the main layout """
@@ -42,20 +42,16 @@ class Gala(QWidget):
         self.trayMenu.addAction("Hide", self.hide)
         self.trayMenu.addAction("Quit", self.quit)
 
-        self.tray = QSystemTrayIcon(QIcon("orange.png"), self)
+        self.tray = QSystemTrayIcon(QIcon("Icon\orange.png"), self)
         self.tray.setContextMenu(self.trayMenu)
         self.tray.activated.connect(self.onClickEvent)
         self.tray.show()
 
-        self.tableItem = QTableWidgetItem("Hello")
-        self.tableItem.setText("Hello")
+        self.tableItem = QTableWidgetItem("Tuesday")
         self.tableItem2 = QTableWidgetItem("World")
-        self.tableItem2.setText("World")
 
         self.firstHeader = "Time"
         self.secondHeader = "Description"
-        self.timeCol = 0
-        self.descCol = 1
 
         self.table = QTableWidget(self)
         self.table.setRowCount(self.numRow)
@@ -87,11 +83,15 @@ class Gala(QWidget):
         self.saveButton = self.createButton("Save", self.saveButtonClick)
         self.galaButton = self.createButton("Gala", self.galaButtonClick)
         self.loadButton = self.createButton("Load", self.loadButtonClick)
+        self.infoButton = self.createButton("Info", self.infoButtonClick)
+        self.checkButton = self.createButton("Check", self.checkButtonClick)
 
         layout = QGridLayout(self)
         layout.addWidget(self.table, 0, 0, 1, 6)
         layout.addWidget(self.loadButton, 1, 0)
         layout.addWidget(self.saveButton, 1, 1)
+        layout.addWidget(self.checkButton, 1, 3)
+        layout.addWidget(self.infoButton, 1, 4)
         layout.addWidget(self.galaButton, 1, 5)
         # only vertical resize allowed
         layout.setSizeConstraint(QLayout.SetMinAndMaxSize)
@@ -99,6 +99,7 @@ class Gala(QWidget):
 
         height = self.table.verticalHeader().width() * 20 
         self.resize(self.sizeHint().width(), height)
+        self.setWindowIcon(QIcon("Icon\orange.png"))
         self.setWindowTitle("Gala")
 
     def autoLoad(self):
@@ -110,14 +111,6 @@ class Gala(QWidget):
         btn.clicked.connect(func)
         return btn
         
-    def openGalaPopup(self):
-        topRight = self.rect().topRight()
-        topRight = self.mapToGlobal(topRight)
-
-        galaPopup = GalaPopup("17:00", "Peace")
-        galaPopup.move(topRight)
-        galaPopup.exec_()
-
     def onClickEvent(self, event):
         if event == QSystemTrayIcon.DoubleClick:
             self.open()
@@ -133,21 +126,36 @@ class Gala(QWidget):
         self.hide()
 
     def galaButtonClick(self):
-        self.openGalaPopup()
+        topRight = self.rect().topRight()
+        topRight = self.mapToGlobal(topRight)
+
+        galaPopup = GalaPopup("17:00", "Peace")
+        galaPopup.move(topRight)
+        galaPopup.exec_()
 
     def saveButtonClick(self):
-        self.save()
-
-    def loadButtonClick(self):
-        pass
-
-    def save(self):
         self.setFocus()
         with open("GalaData.json", 'w') as f:
             data = self.convertTableToJson()
             f.write(data)
             f.close()
     
+    def loadButtonClick(self):
+        pass
+
+    def infoButtonClick(self):
+        ex = GalaPopup("Examples", 
+                "Tues 1:00 pm | Fri 3:00 pm | Sat 8:30 am\n\n"
+                "Valid days\n"
+                "Mon | Tues | Wed | Thurs | Fri | Sat | Sun\n\n"
+                "Valid times\n"
+                "12:00 am ... 11:59 pm")
+        ex.setWindowTitle("Info")
+        ex.exec_()
+
+    def checkButtonClick(self):
+        pass
+
     def open(self):
         self.setVisible(True)
         self.raise_()
