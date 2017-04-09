@@ -128,11 +128,7 @@ class Gala(QWidget):
         self.hide()
 
     def galaButtonClick(self):
-        topRight = self.rect().topRight()
-        topRight = self.mapToGlobal(topRight)
-
         galaPopup = GalaPopup("17:00", "Peace")
-        galaPopup.move(topRight)
         galaPopup.exec_()
 
     def saveButtonClick(self):
@@ -173,6 +169,10 @@ class Gala(QWidget):
     def hide(self):
         self.setVisible(False)
 
+    def getNextJob(self, jobArr):
+        for i in range(0, len(jobArr)):
+            pass
+
     def clearTable(self):
         for row in range(0, self.numRow):
             for col in range(0, self.numColumn):
@@ -207,6 +207,9 @@ class Gala(QWidget):
         return jsonString
 
     def convertJsonToTable(self):
+        if not os.path.isfile(r"UserData\GalaData.json"):
+            return 0
+
         galaData = open(r"UserData\GalaData.json").read()
         galaData = json.loads(galaData)
         
@@ -218,6 +221,17 @@ class Gala(QWidget):
             self.table.setItem(row, 0, QTableWidgetItem(time))
             self.table.setItem(row, 1, QTableWidgetItem(info))
 
+    def convertTableToDict(self):
+        jobArr = []
+        for row in range(0, self.numRow):
+            job = {}
+            for col in range(0, self.numColumn):
+                if col == 1:
+                    job["time"] = self.table.item(row, col)
+                elif col == 2:
+                    job["description"] = self.table.item(row, col)
+            jobArr.append(job)
+        return jobArr
 
 def main():
     import sys
