@@ -1,0 +1,19 @@
+{
+    "gala_items": [
+        {
+            "time": "Tues 12:00 pm",
+            "row": 0,
+            "description": "Go to bus stop"
+        },
+        {
+            "time": "Mon 11:00 am ",
+            "row": 1,
+            "description": "Go to lecture"
+        },
+        {
+            "time": "Wed 7:00 am",
+            "row": 5,
+            "description": "Hide from dinosaurs"
+        }
+    ]
+}

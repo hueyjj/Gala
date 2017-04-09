@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import calendar, sys, json
+import calendar, sys, json, os
 
 from PyQt5.QtCore import Qt, QCoreApplication
 from PyQt5.QtWidgets import (QApplication, QWidget, QSystemTrayIcon, QMenu,
@@ -42,7 +42,7 @@ class Gala(QWidget):
         self.trayMenu.addAction("Hide", self.hide)
         self.trayMenu.addAction("Quit", self.quit)
 
-        self.tray = QSystemTrayIcon(QIcon("Icon\orange.png"), self)
+        self.tray = QSystemTrayIcon(QIcon(r"Icon\orange.png"), self)
         self.tray.setContextMenu(self.trayMenu)
         self.tray.activated.connect(self.onClickEvent)
         self.tray.show()
@@ -85,11 +85,13 @@ class Gala(QWidget):
         self.loadButton = self.createButton("Load", self.loadButtonClick)
         self.infoButton = self.createButton("Info", self.infoButtonClick)
         self.checkButton = self.createButton("Check", self.checkButtonClick)
+        self.clearButton = self.createButton("Clear", self.clearButtonClick)
 
         layout = QGridLayout(self)
         layout.addWidget(self.table, 0, 0, 1, 6)
         layout.addWidget(self.loadButton, 1, 0)
         layout.addWidget(self.saveButton, 1, 1)
+        layout.addWidget(self.clearButton, 1, 2)
         layout.addWidget(self.checkButton, 1, 3)
         layout.addWidget(self.infoButton, 1, 4)
         layout.addWidget(self.galaButton, 1, 5)
@@ -99,7 +101,7 @@ class Gala(QWidget):
 
         height = self.table.verticalHeader().width() * 20 
         self.resize(self.sizeHint().width(), height)
-        self.setWindowIcon(QIcon("Icon\orange.png"))
+        self.setWindowIcon(QIcon(r"Icon\orange.png"))
         self.setWindowTitle("Gala")
 
     def autoLoad(self):
@@ -135,13 +137,14 @@ class Gala(QWidget):
 
     def saveButtonClick(self):
         self.setFocus()
-        with open("GalaData.json", 'w') as f:
+        os.makedirs("UserData", exist_ok=True)
+        with open(r"UserData\GalaData.json", 'w') as f:
             data = self.convertTableToJson()
             f.write(data)
             f.close()
     
     def loadButtonClick(self):
-        pass
+        self.convertJsonToTable()
 
     def infoButtonClick(self):
         ex = GalaPopup("Examples", 
@@ -156,6 +159,9 @@ class Gala(QWidget):
     def checkButtonClick(self):
         pass
 
+    def clearButtonClick(self):
+        self.clearTable()
+
     def open(self):
         self.setVisible(True)
         self.raise_()
@@ -166,6 +172,12 @@ class Gala(QWidget):
 
     def hide(self):
         self.setVisible(False)
+
+    def clearTable(self):
+        for row in range(0, self.numRow):
+            for col in range(0, self.numColumn):
+                g = QTableWidgetItem("")
+                self.table.setItem(row, col, g)
 
     def convertTableToJson(self):
         items = []
@@ -194,6 +206,19 @@ class Gala(QWidget):
         jsonString = json.dumps(galaItems, indent=4)
         return jsonString
 
+    def convertJsonToTable(self):
+        galaData = open(r"UserData\GalaData.json").read()
+        galaData = json.loads(galaData)
+        
+        for i in range(0, len(galaData["gala_items"])):
+            row = galaData["gala_items"][i]["row"]
+            time = galaData["gala_items"][i]["time"]
+            info = galaData["gala_items"][i]["description"]
+            
+            self.table.setItem(row, 0, QTableWidgetItem(time))
+            self.table.setItem(row, 1, QTableWidgetItem(info))
+
+
 def main():
     import sys
 
@@ -202,6 +227,7 @@ def main():
 
     gala = Gala()
     gala.show()
+
     sys.exit(app.exec_())
 
 if __name__ == '__main__':
