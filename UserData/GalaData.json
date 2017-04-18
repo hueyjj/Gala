@@ -1,14 +1,104 @@
 {
     "gala_items": [
         {
-            "description": null,
+            "time": "",
             "row": 0,
-            "time": "Tuesday"
+            "description": ""
         },
         {
-            "description": null,
+            "time": "",
             "row": 1,
-            "time": "World"
+            "description": ""
+        },
+        {
+            "time": "",
+            "row": 2,
+            "description": ""
+        },
+        {
+            "time": "",
+            "row": 3,
+            "description": ""
+        },
+        {
+            "time": "",
+            "row": 4,
+            "description": ""
+        },
+        {
+            "time": "",
+            "row": 5,
+            "description": ""
+        },
+        {
+            "time": "",
+            "row": 6,
+            "description": ""
+        },
+        {
+            "time": "",
+            "row": 7,
+            "description": ""
+        },
+        {
+            "time": "",
+            "row": 8,
+            "description": ""
+        },
+        {
+            "time": "",
+            "row": 9,
+            "description": ""
+        },
+        {
+            "time": "",
+            "row": 10,
+            "description": ""
+        },
+        {
+            "time": "",
+            "row": 11,
+            "description": ""
+        },
+        {
+            "time": "",
+            "row": 12,
+            "description": ""
+        },
+        {
+            "time": "",
+            "row": 13,
+            "description": ""
+        },
+        {
+            "time": "",
+            "row": 14,
+            "description": ""
+        },
+        {
+            "time": "",
+            "row": 15,
+            "description": ""
+        },
+        {
+            "time": "",
+            "row": 16,
+            "description": ""
+        },
+        {
+            "time": "",
+            "row": 17,
+            "description": ""
+        },
+        {
+            "time": "",
+            "row": 18,
+            "description": ""
+        },
+        {
+            "time": "",
+            "row": 19,
+            "description": ""
         }
     ]
 }

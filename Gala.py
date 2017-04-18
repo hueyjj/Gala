@@ -37,6 +37,11 @@ class Gala(QWidget):
         self.numRow = 20
         self.numColumn = 2
 
+        self.validDate = ["mon", "tues", "wed", "thurs", "fri",
+                "sat", "sun"]
+        self.AM = "am"
+        self.PM = "pm"
+
         self.trayMenu = QMenu(self)
         self.trayMenu.addAction("Open", self.open)
         self.trayMenu.addAction("Hide", self.hide)
@@ -84,7 +89,7 @@ class Gala(QWidget):
         self.galaButton = self.createButton("Gala", self.galaButtonClick)
         self.loadButton = self.createButton("Load", self.loadButtonClick)
         self.infoButton = self.createButton("Info", self.infoButtonClick)
-        self.checkButton = self.createButton("Check", self.checkButtonClick)
+        # self.checkButton = self.createButton("Check", self.checkButtonClick)
         self.clearButton = self.createButton("Clear", self.clearButtonClick)
 
         layout = QGridLayout(self)
@@ -92,7 +97,7 @@ class Gala(QWidget):
         layout.addWidget(self.loadButton, 1, 0)
         layout.addWidget(self.saveButton, 1, 1)
         layout.addWidget(self.clearButton, 1, 2)
-        layout.addWidget(self.checkButton, 1, 3)
+        # layout.addWidget(self.checkButton, 1, 3)
         layout.addWidget(self.infoButton, 1, 4)
         layout.addWidget(self.galaButton, 1, 5)
         # only vertical resize allowed
@@ -128,8 +133,7 @@ class Gala(QWidget):
         self.hide()
 
     def galaButtonClick(self):
-        galaPopup = GalaPopup("17:00", "Peace")
-        galaPopup.exec_()
+        pass
 
     def saveButtonClick(self):
         self.setFocus()
@@ -140,7 +144,7 @@ class Gala(QWidget):
             f.close()
     
     def loadButtonClick(self):
-        self.convertJsonToTable()
+        self.convertJsonToTable(r"UserData\GalaData.json")
 
     def infoButtonClick(self):
         ex = GalaPopup("Examples", 
@@ -159,6 +163,7 @@ class Gala(QWidget):
         self.clearTable()
 
     def open(self):
+        
         self.setVisible(True)
         self.raise_()
 
@@ -167,12 +172,43 @@ class Gala(QWidget):
         self.close()
 
     def hide(self):
+        print()
         self.setVisible(False)
 
-    def getNextJob(self, jobArr):
-        for i in range(0, len(jobArr)):
-            pass
+    def getNextJob(self, arr):
+        for i in range(0, len(arr)):
+            print()
 
+    
+    def checkTimeSyntax(self):
+        """ Validate time
+        Assume (or enforce) time format as "DATE TIME AM/PM".
+        Example (from string to an array): ["Tues", "11:00", "am"]
+        """
+
+        errMsg = ""
+        for row in range(0, self.numRow):
+            time = self.table.item(row, 0)
+            if time is None:
+                continue
+            time = time.text().split()
+            if len(time) != 3:
+                errMsg += "Not a valid time"
+            
+            if not isDate(date):
+                pass
+           
+    def isDate(self, d):
+        pass
+
+    def isTime(self, t):
+        pass
+
+    def isAM(self, a):
+        if a.lower() == self.AM:
+            return True
+        return False
+        
     def clearTable(self):
         for row in range(0, self.numRow):
             for col in range(0, self.numColumn):
@@ -206,11 +242,11 @@ class Gala(QWidget):
         jsonString = json.dumps(galaItems, indent=4)
         return jsonString
 
-    def convertJsonToTable(self):
-        if not os.path.isfile(r"UserData\GalaData.json"):
+    def convertJsonToTable(self, path):
+        if not os.path.isfile(path):
             return 0
 
-        galaData = open(r"UserData\GalaData.json").read()
+        galaData = open(path).read()
         galaData = json.loads(galaData)
         
         for i in range(0, len(galaData["gala_items"])):
@@ -224,13 +260,13 @@ class Gala(QWidget):
     def convertTableToDict(self):
         jobArr = []
         for row in range(0, self.numRow):
-            job = {}
+            newJob = {}
             for col in range(0, self.numColumn):
                 if col == 1:
-                    job["time"] = self.table.item(row, col)
+                    newJob["time"] = self.table.item(row, col)
                 elif col == 2:
-                    job["description"] = self.table.item(row, col)
-            jobArr.append(job)
+                    newJob["description"] = self.table.item(row, col)
+            jobArr.append(newJob)
         return jobArr
 
 def main():
