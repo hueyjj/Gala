@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import calendar, sys, json, os
 
@@ -42,12 +42,15 @@ class Gala(QWidget):
         self.AM = "am"
         self.PM = "pm"
 
+        self.data_path = os.path.abspath("UserData/GalaData.json")
+        self.icon_path = os.path.abspath("Icon/orange.png")
+
         self.trayMenu = QMenu(self)
         self.trayMenu.addAction("Open", self.open)
         self.trayMenu.addAction("Hide", self.hide)
         self.trayMenu.addAction("Quit", self.quit)
 
-        self.tray = QSystemTrayIcon(QIcon(r"Icon\orange.png"), self)
+        self.tray = QSystemTrayIcon(QIcon(self.icon_path), self)
         self.tray.setContextMenu(self.trayMenu)
         self.tray.activated.connect(self.onClickEvent)
         self.tray.show()
@@ -106,7 +109,7 @@ class Gala(QWidget):
 
         height = self.table.verticalHeader().width() * 20 
         self.resize(self.sizeHint().width(), height)
-        self.setWindowIcon(QIcon(r"Icon\orange.png"))
+        self.setWindowIcon(QIcon(self.icon_path))
         self.setWindowTitle("Gala")
 
     def autoLoad(self):
@@ -138,13 +141,13 @@ class Gala(QWidget):
     def saveButtonClick(self):
         self.setFocus()
         os.makedirs("UserData", exist_ok=True)
-        with open(r"UserData\GalaData.json", 'w') as f:
+        with open(self.data_path, 'w') as f:
             data = self.convertTableToJson()
             f.write(data)
             f.close()
     
     def loadButtonClick(self):
-        self.convertJsonToTable(r"UserData\GalaData.json")
+        self.convertJsonToTable(self.data_path)
 
     def infoButtonClick(self):
         ex = GalaPopup("Examples", 
