@@ -18,18 +18,18 @@ class GalaPopup(QMessageBox):
 
     def __init__(self, text="", description="", parent=None):
         super().__init__(parent)
-        self.__text = text
-        self.__description= description 
+        self.text = text
+        self.description= description 
 
         self.setText(text)
         self.setInformativeText(description)
         self.setWindowTitle("GalaPopup")
 
     def text():
-        return self.__text
+        return self.text
 
     def description():
-        return self.__description
+        return self.description
         
 class Gala(QWidget):
     """ Main window that holds the main layout """
@@ -37,17 +37,17 @@ class Gala(QWidget):
     def __init__(self, parent=None):
         super().__init__()
 
-        self.__GALA_WORKING = False
+        self.GALA_WORKING = False
 
-        self.__ignoreQuit = True 
-        self.__columnWidth = 100
-        self.__numRow = 20
-        self.__numColumn = 2
+        self.ignoreQuit = True 
+        self.columnWidth = 100
+        self.numRow     = 20
+        self.numColumn  = 2
 
         self.validDate = ["mon", "tues", "wed", "thurs", "fri",
-                "sat", "sun"]
-        self.__AM = "am"
-        self.__PM = "pm"
+                          "sat", "sun"]
+        self.AM = "am"
+        self.PM = "pm"
 
         self.data_path = os.path.abspath("UserData/GalaData.json")
         self.icon_path = os.path.abspath("Icon/orange.png")
@@ -66,12 +66,12 @@ class Gala(QWidget):
         self.secondHeader = "Description"
 
         self.table = QTableWidget(self)
-        self.table.setRowCount(self.__numRow)
-        self.table.setColumnCount(self.__numColumn)
+        self.table.setRowCount(self.numRow)
+        self.table.setColumnCount(self.numColumn)
         self.table.setHorizontalHeaderLabels([self.firstHeader, 
             self.secondHeader])
-        #self.table.setColumnWidth(0, self.__columnWidth)
-        #self.table.setColumnWidth(1, self.__columnWidth)
+        #self.table.setColumnWidth(0, self.columnWidth)
+        #self.table.setColumnWidth(1, self.columnWidth)
         
         self.tableScrollW = self.table.verticalScrollBar().sizeHint().width()
         self.tableHeaderW = self.table.horizontalHeader().length() 
@@ -131,7 +131,7 @@ class Gala(QWidget):
         self.open_()
 
     def closeEvent(self, closeEvent):
-        if self.__ignoreQuit:
+        if self.ignoreQuit:
             closeEvent.ignore()
             self.hide()
         else:
@@ -183,7 +183,7 @@ class Gala(QWidget):
         self.raise_()
 
     def quit(self):
-        self.__ignoreQuit = False
+        self.ignoreQuit = False
         self.close()
 
     def hide(self):
@@ -208,7 +208,7 @@ class Gala(QWidget):
         """
         # TODO More strict time check. i.e right now Tues 0:00 pm is okay...
         # maybe more checks or simplify some steps?
-        for row in range(0, self.__numRow):
+        for row in range(0, self.numRow):
             galaTime = self.table.item(row, 0)
 
             if galaTime is None or galaTime.text() is "": continue
@@ -252,24 +252,24 @@ class Gala(QWidget):
             return False
 
     def isAmPm(self, am_pm):
-        if am_pm.lower() == self.__AM or am_pm.lower() == self.__PM:
+        if am_pm.lower() == self.AM or am_pm.lower() == self.PM:
             return True
         else:
             return False
         
     def clearTable(self):
-        for row in range(0, self.__numRow):
-            for col in range(0, self.__numColumn):
+        for row in range(0, self.numRow):
+            for col in range(0, self.numColumn):
                 g = QTableWidgetItem("")
                 self.table.setItem(row, col, g)
 
     def convertTableToJson(self):
         items = []
-        for row in range(0, self.__numRow):
+        for row in range(0, self.numRow):
             item = {} 
             item["row"] = row
 
-            for col in range(0, self.__numColumn):
+            for col in range(0, self.numColumn):
                 tableItem = self.table.item(row, col)
                 if tableItem is None:
                     text = None
@@ -304,9 +304,9 @@ class Gala(QWidget):
 
     def convertTableToDict(self):
         jobArr = []
-        for row in range(0, self.__numRow):
+        for row in range(0, self.numRow):
             newJob = {}
-            for col in range(0, self.__numColumn):
+            for col in range(0, self.numColumn):
                 if col == 1:
                     newJob["time"] = self.table.item(row, col)
                 elif col == 2:
