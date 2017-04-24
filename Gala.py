@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from enum import Enum
-import calendar, sys, json, os, datetime
+import calendar, sys, json, os, datetime, threading, time
 
 from PyQt5.QtCore import Qt, QCoreApplication
 from PyQt5.QtWidgets import (QApplication, QWidget, QSystemTrayIcon, QMenu,
@@ -21,65 +21,61 @@ class Weekday(Enum):
 
 class GalaThread(threading.Thread):
     
-    def __init__(self, threadName, timeOut, msg):
+    def __init__(self, timeOut, msg):
         self._stopEvent = threading.Event()
-        super().__init__(target=galaTimer)
-        self.name       = threadName
+        super().__init__(target=self.galaTimer)
+        self.timeOutMsg = timeOut
         self.timeOut    = Gala.parseTime(timeOut)
         self.msg        = msg
 
-        self.maxTime = 604800 # self.maxTime == Monday 12:00 am or 0 seconds
-
         # timeOut == ["Day", "Hour", "Min"]
-        self.weekday  = timeOut[0]
-        self.hour     = timeOut[1]
-        self.min      = timeOut[2]
-        
+        self.weekday  = self.timeOut[0]
+        self.hour     = self.timeOut[1]
+        self.min      = self.timeOut[2]
+       
+        print("weekday", self.weekday, "hour", self.hour, "min", self.min, flush=True)
         self.endTime = Gala.normalizeTime(self.weekday, self.hour, self.min)
 
     def stop(self):
         self._stopEvent.set()
 
     def wait(self):
-        nowTime = timeNow()
+        nowTime = Gala.timeNow()
         if self.endTime < nowTime:
-            deltaTime = self.maxTime - abs(self.endTime - nowTime)
+            deltaTime = Gala.MAX_TIME - abs(self.endTime - nowTime)
         else:
             deltaTime = self.endTime - nowTime
 
+        print("blocking now...", flush=True)
         self._stopEvent.wait(deltaTime)
+        print("done blocking", flush=True)
 
     def isSet(self):
         self._stopEvent.is_set()
 
     def isEnd(self):
-        if timeNow() >= self.endTime: return True
+        if Gala.timeNow() >= self.endTime: return True
         return False
         
-    def timeNow(self):
-        now = datetime.datetime.now()
-        nowTime = Gala.normalizeTime(now.weekday, now.hour, now.min)
-        return nowTime
-
     def galaTimer(self):
         if not self.isSet():
             self.wait()
 
-        if isEnd():
-            msgBox = GalaPopup(self.timeOut, self.msg)
-            msgBox.setWindowTitle("Gala Delivery")
+        if self.isEnd():
+            msgBox = GalaPopup("Gala delivery", self.timeOutMsg, self.msg)
             msgBox.exec_()
 
 class GalaPopup(QMessageBox):
 
-    def __init__(self, text="", description="", parent=None):
+    def __init__(self, windTitle="GalaPopup",
+                 text="", description="", parent=None):
         super().__init__(parent)
         self.text = text
         self.description= description 
 
         self.setText(text)
         self.setInformativeText(description)
-        self.setWindowTitle("GalaPopup")
+        self.setWindowTitle(windTitle)
 
     def text():
         return self.text
@@ -90,10 +86,12 @@ class GalaPopup(QMessageBox):
 class Gala(QWidget):
     """ Main window that holds the main layout """
 
+    MAX_TIME = 604800 # self.maxTime == Monday 12:00 am or 0 seconds
+
     def __init__(self, parent=None):
         super().__init__()
 
-        self.GALA_WORKING = False
+        self.threads = []
 
         self.ignoreQuit = True 
         self.columnWidth = 100
@@ -198,14 +196,34 @@ class Gala(QWidget):
 
     def galaButtonClick(self):
         if self.validTimes(msgHint="Failed to start.") == True:
+            for i in range(0, len(self.threads)):
+                threads[i].stop()
+
             self.hide()
-            #scan for next job
-            firstJob = None
+
+            now = Gala.timeNow()
+            minTime = None
+            num = None
             for row in range(0, self.numRow):
                 txt = self.table.item(row, 0).text()
-                time = Gala.parseTime(txt)
-                time = Gala.normalizeTime(time)
-        
+                if txt == "": continue
+
+                end = Gala.parseTime(txt)
+                end = Gala.normalizeTime(end[0], end[1], end[2])
+                if end < now:
+                    deltaTime = Gala.MAX_TIME - abs(end - now)
+                else:
+                    deltaTime = end - now
+
+                if minTime is None or deltaTime < minTime:
+                    minTime = deltaTime
+                    num = row
+             
+            galaThread = GalaThread(self.table.item(num, 0).text(),
+                                    self.table.item(num, 1).text())
+            print("starting a thread", flush=True)
+            galaThread.start()
+            self.threads.append(galaThread)
 
     def saveButtonClick(self):
         self.setFocus()
@@ -251,6 +269,12 @@ class Gala(QWidget):
         self.setVisible(False)
 
     @staticmethod
+    def timeNow():
+        now = datetime.datetime.now()
+        nowTime = Gala.normalizeTime(now.weekday(), now.hour, now.minute)
+        return nowTime
+
+    @staticmethod
     def parseTime(text):
         text = text.split()
 
@@ -262,7 +286,7 @@ class Gala(QWidget):
         min_ = int(time[1])
 
         amPM = text[2].lower()
-        if amPM == "pm" and hour is in range(1, 12):
+        if amPM == "pm" and hour in range(1, 12):
             hour += 12
         elif hour is 12 and amPM is "am":
             hour -= 12
@@ -271,15 +295,16 @@ class Gala(QWidget):
 
     @staticmethod
     def normalizeTime(day, hour, min_):
-         """ 
+        """ 
          days      = [Mon...Sun] = [0...6]
          hours     = [0...24]
          minutes   = [0...60]
          Normalize to/with Monday 00:00 (12:00 am) as 0 or self.maxNorm
          in seconds.
          Example: Thursday 14:00 (2:00 pm) = 396,000 seconds from 0 
-         """
-        day     = day  * 24 * 60 * 60
+        """
+        print(day, hour, min_, flush=True)
+        day     = day * 24 * 60 * 60
         hour    = hour * 60 * 60
         min_    = min_ * 60
         normTime = day + hour + min_
