@@ -3,7 +3,7 @@
 from enum import Enum
 import calendar, sys, json, os, datetime, threading, time
 
-from PyQt5.QtCore import Qt, QCoreApplication
+from PyQt5.QtCore import Qt, QCoreApplication, QThread, pyqtSignal
 from PyQt5.QtWidgets import (QApplication, QWidget, QSystemTrayIcon, QMenu,
         QTableWidget, QTableWidgetItem, QLayout, QGridLayout, QDialog, 
         QSizePolicy, QScrollBar, QHeaderView, QToolButton, QDialogButtonBox,
@@ -19,11 +19,14 @@ class Weekday(Enum):
     sat     = 5
     sun     = 6
 
-class GalaThread(threading.Thread):
+class GalaThread(QThread):
     
+    signal = pyqtSignal(str, str)
+
     def __init__(self, timeOut, msg):
+        super().__init__()
+
         self._stopEvent = threading.Event()
-        super().__init__(target=self.galaTimer)
         self.timeOutMsg = timeOut
         self.timeOut    = Gala.parseTime(timeOut)
         self.msg        = msg
@@ -33,8 +36,10 @@ class GalaThread(threading.Thread):
         self.hour     = self.timeOut[1]
         self.min      = self.timeOut[2]
        
-        print("weekday", self.weekday, "hour", self.hour, "min", self.min, flush=True)
         self.endTime = Gala.normalizeTime(self.weekday, self.hour, self.min)
+
+    def run(self):
+        self.galaTimer()
 
     def stop(self):
         self._stopEvent.set()
@@ -46,9 +51,7 @@ class GalaThread(threading.Thread):
         else:
             deltaTime = self.endTime - nowTime
 
-        print("blocking now...", flush=True)
         self._stopEvent.wait(deltaTime)
-        print("done blocking", flush=True)
 
     def isSet(self):
         self._stopEvent.is_set()
@@ -62,8 +65,7 @@ class GalaThread(threading.Thread):
             self.wait()
 
         if self.isEnd():
-            msgBox = GalaPopup("Gala delivery", self.timeOutMsg, self.msg)
-            msgBox.exec_()
+            self.signal.emit(self.timeOutMsg, self.msg)
 
 class GalaPopup(QMessageBox):
 
@@ -197,7 +199,7 @@ class Gala(QWidget):
     def galaButtonClick(self):
         if self.validTimes(msgHint="Failed to start.") == True:
             for i in range(0, len(self.threads)):
-                threads[i].stop()
+                self.threads[i].stop()
 
             self.hide()
 
@@ -219,10 +221,11 @@ class Gala(QWidget):
                     minTime = deltaTime
                     num = row
              
-            galaThread = GalaThread(self.table.item(num, 0).text(),
+            galaThread = GalaThread(self.table.item(num, 0).text(), 
                                     self.table.item(num, 1).text())
-            print("starting a thread", flush=True)
+            galaThread.signal.connect(self.delivMsg)
             galaThread.start()
+
             self.threads.append(galaThread)
 
     def saveButtonClick(self):
@@ -303,13 +306,16 @@ class Gala(QWidget):
          in seconds.
          Example: Thursday 14:00 (2:00 pm) = 396,000 seconds from 0 
         """
-        print(day, hour, min_, flush=True)
         day     = day * 24 * 60 * 60
         hour    = hour * 60 * 60
         min_    = min_ * 60
         normTime = day + hour + min_
 
         return normTime
+
+    def delivMsg(self, timeMsg, msg):
+        msgBox = GalaPopup("Gala delivery", timeMsg, msg)
+        msgBox.exec_()
 
     def errTimeMsg(self, row, msgHint=""):
         errMsg = self.table.item(row, 0).text()
