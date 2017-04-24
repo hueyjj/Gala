@@ -1,9 +1,9 @@
 {
     "gala_items": [
         {
-            "description": "Destory the world",
+            "description": "",
             "row": 0,
-            "time": "Thurs 3:00 pm"
+            "time": ""
         },
         {
             "description": "",
@@ -16,17 +16,17 @@
             "time": ""
         },
         {
-            "description": "Download something",
+            "description": "",
             "row": 3,
-            "time": "Mon 7:00 pm"
+            "time": ""
         },
         {
-            "description": "aesfdsfsd",
+            "description": "",
             "row": 4,
             "time": ""
         },
         {
-            "description": "idk",
+            "description": "",
             "row": 5,
             "time": ""
         },

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-import calendar, sys, json, os
+from enum import Enum
+import calendar, sys, json, os, datetime
 
 from PyQt5.QtCore import Qt, QCoreApplication
 from PyQt5.QtWidgets import (QApplication, QWidget, QSystemTrayIcon, QMenu,
@@ -9,10 +10,65 @@ from PyQt5.QtWidgets import (QApplication, QWidget, QSystemTrayIcon, QMenu,
         QLineEdit, QMessageBox)
 from PyQt5.QtGui import QIcon, QCursor, QWindow, QGuiApplication
 
-class GalaJob():
+class Weekday(Enum):
+    mon     = 0
+    tues    = 1
+    wed     = 2
+    thurs   = 3
+    fri     = 4
+    sat     = 5
+    sun     = 6
+
+class GalaThread(threading.Thread):
     
-    def __init__(self, times):
-        pass
+    def __init__(self, threadName, timeOut, msg):
+        self._stopEvent = threading.Event()
+        super().__init__(target=galaTimer)
+        self.name       = threadName
+        self.timeOut    = Gala.parseTime(timeOut)
+        self.msg        = msg
+
+        self.maxTime = 604800 # self.maxTime == Monday 12:00 am or 0 seconds
+
+        # timeOut == ["Day", "Hour", "Min"]
+        self.weekday  = timeOut[0]
+        self.hour     = timeOut[1]
+        self.min      = timeOut[2]
+        
+        self.endTime = Gala.normalizeTime(self.weekday, self.hour, self.min)
+
+    def stop(self):
+        self._stopEvent.set()
+
+    def wait(self):
+        nowTime = timeNow()
+        if self.endTime < nowTime:
+            deltaTime = self.maxTime - abs(self.endTime - nowTime)
+        else:
+            deltaTime = self.endTime - nowTime
+
+        self._stopEvent.wait(deltaTime)
+
+    def isSet(self):
+        self._stopEvent.is_set()
+
+    def isEnd(self):
+        if timeNow() >= self.endTime: return True
+        return False
+        
+    def timeNow(self):
+        now = datetime.datetime.now()
+        nowTime = Gala.normalizeTime(now.weekday, now.hour, now.min)
+        return nowTime
+
+    def galaTimer(self):
+        if not self.isSet():
+            self.wait()
+
+        if isEnd():
+            msgBox = GalaPopup(self.timeOut, self.msg)
+            msgBox.setWindowTitle("Gala Delivery")
+            msgBox.exec_()
 
 class GalaPopup(QMessageBox):
 
@@ -141,10 +197,15 @@ class Gala(QWidget):
         self.hide()
 
     def galaButtonClick(self):
-        # hide window
-        # scan for next job
-        # sleep until end of job
-        #       
+        if self.validTimes(msgHint="Failed to start.") == True:
+            self.hide()
+            #scan for next job
+            firstJob = None
+            for row in range(0, self.numRow):
+                txt = self.table.item(row, 0).text()
+                time = Gala.parseTime(txt)
+                time = Gala.normalizeTime(time)
+        
 
     def saveButtonClick(self):
         self.setFocus()
@@ -189,9 +250,41 @@ class Gala(QWidget):
     def hide(self):
         self.setVisible(False)
 
-    def getNextJob(self, arr):
-        for i in range(0, len(arr)):
-            print()
+    @staticmethod
+    def parseTime(text):
+        text = text.split()
+
+        weekday = text[0].lower()
+        weekday = Weekday[weekday].value
+
+        time = text[1].split(':')
+        hour = int(time[0])
+        min_ = int(time[1])
+
+        amPM = text[2].lower()
+        if amPM == "pm" and hour is in range(1, 12):
+            hour += 12
+        elif hour is 12 and amPM is "am":
+            hour -= 12
+
+        return [weekday, hour, min_]
+
+    @staticmethod
+    def normalizeTime(day, hour, min_):
+         """ 
+         days      = [Mon...Sun] = [0...6]
+         hours     = [0...24]
+         minutes   = [0...60]
+         Normalize to/with Monday 00:00 (12:00 am) as 0 or self.maxNorm
+         in seconds.
+         Example: Thursday 14:00 (2:00 pm) = 396,000 seconds from 0 
+         """
+        day     = day  * 24 * 60 * 60
+        hour    = hour * 60 * 60
+        min_    = min_ * 60
+        normTime = day + hour + min_
+
+        return normTime
 
     def errTimeMsg(self, row, msgHint=""):
         errMsg = self.table.item(row, 0).text()
@@ -243,7 +336,7 @@ class Gala(QWidget):
 
         hour    = int(time[0])
         minute  = int(time[1])
-        hourRange = lambda : range(0, 13)
+        hourRange = lambda : range(1, 13)
         minuteRange = lambda : range(0, 61)
 
         if hour in hourRange() and minute in minuteRange():
