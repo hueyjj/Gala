@@ -51,7 +51,7 @@ class GalaThread(QThread):
         else:
             deltaTime = self.endTime - nowTime
 
-        self._stopEvent.wait(deltaTime)
+        return self._stopEvent.wait(deltaTime)
 
     def isSet(self):
         self._stopEvent.is_set()
@@ -62,9 +62,9 @@ class GalaThread(QThread):
         
     def galaTimer(self):
         if not self.isSet():
-            self.wait()
-
-        if self.isEnd():
+            wait = self.wait()
+        
+        if wait is False:
             self.signal.emit(self.timeOutMsg, self.msg)
 
 class GalaPopup(QMessageBox):
