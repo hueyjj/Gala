@@ -1,0 +1,2 @@
+# Gala
+PyQT todo app
